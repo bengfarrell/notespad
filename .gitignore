@@ -1,5 +1,7 @@
 src/**/*.js.map
 src/**/*.js
+package-lock.json
+assets/demucs/*
 
 # Logs
 logs

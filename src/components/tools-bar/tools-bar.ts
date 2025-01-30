@@ -5,14 +5,18 @@ import '@spectrum-web-components/action-button/sp-action-button.js';
 import '@spectrum-web-components/icons-workflow/icons/sp-icon-brackets-square.js';
 
 import { style } from './tools-bar.css.js';
-import { AppController } from '../../models/app';
+import { AppController } from '../../models/app.js';
+import { TabsController } from '../../models/tabs.js';
+import { AudioTrackTabConfig } from '../../models/tabfactory.js';
+import { trimAudioBuffer } from '../../utils/audio.js';
 
 @customElement('notespad-tools-bar')
 export class ToolsBar extends LitElement {
 
     static styles = style;
 
-    appController = AppController.attachHost(this);
+    protected appController = AppController.attachHost(this);
+    protected tabsController = TabsController.attachHost(this);
 
     render() {
         return html`
@@ -22,11 +26,13 @@ export class ToolsBar extends LitElement {
     }
 
     copyAndTrim() {
-        if (this.appController.selectedRange) {
-        const copy = this.appController.currentTrack.clone('');
-        copy.name += ' (copy)';
-        copy.trim(this.appController.selectedRange[0] * this.appController.currentTrack.BPM, this.appController.selectedRange[1] * this.appController.currentTrack.BPM);
-        this.appController.loadTrack(copy);
+        const tabData = this.tabsController.currentTab;
+        if (this.appController.selectedRange && tabData) {
+            const trimmedBuffer = trimAudioBuffer(
+                (tabData as AudioTrackTabConfig).buffer,
+                this.appController.selectedRange[0],
+                this.appController.selectedRange[1]);
+            this.tabsController.createTab(new AudioTrackTabConfig( tabData.name + ' (copy)', trimmedBuffer));
         }
     }
 }

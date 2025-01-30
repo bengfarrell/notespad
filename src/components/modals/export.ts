@@ -3,7 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 import { AppController } from '../../models/app.js';
-import { playSleepSyntax } from '../../utils/sonic-pi-exporter';
+//import { playSleepSyntax } from '../../utils/sonic-pi-exporter';
 
 import '@spectrum-web-components/button/sp-button.js';
 import '@spectrum-web-components/icons-workflow/icons/sp-icon-copy.js';
@@ -68,7 +68,7 @@ export class ExportModal extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
-        this.code = playSleepSyntax(this.appController.currentTrack);
+        //this.code = playSleepSyntax(this.appController.currentTrack);
     }
 
     render() {

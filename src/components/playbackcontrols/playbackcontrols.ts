@@ -16,33 +16,68 @@ import '@spectrum-web-components/picker/sp-picker.js';
 import '@spectrum-web-components/slider/sp-slider.js';
 import '@spectrum-web-components/number-field/sp-number-field.js';
 
-import { formatTimeSignature } from '../../models/app.js';
-import { Playback } from 'midi-sequence-timeline/playback/timedplayback.js';
+import { formatTimeSignature, AppController } from '../../models/app.js';
+import { MIDITimedPlayback, Playback as MIDIPlayback } from 'music-timeline/playback/miditimedplayback.js';
+import { AudioPlayback, Playback as AudioTrackPlayback } from 'music-timeline/playback/audioplayback.js';
 
 import { style } from './playbackcontrols.css.js';
-import { AppController } from '../../models/app.js';
+import { TabsController, Tabs } from '../../models/tabs';
+import { AudioTrackTabConfig, MIDITrackTabConfig } from '../../models/tabfactory';
 
 @customElement('notespad-playback-controls')
 export class PlaybackControls extends LitElement {
     static styles = style;
 
+    protected tabsController = TabsController.attachHost(this);
+
     isPlaying = false;
 
     app = AppController.attachHost(this);
 
-    playback = Playback.attachHost(this);
+    tabPlaying?: string
 
-    get canPlay() {
-        return !this.app.currentTrack;
+    midiPlayback = MIDIPlayback.attachHost(this);
+    audioPlayback = AudioTrackPlayback.attachHost(this);
+
+    constructor() {
+        super();
+        this.tabsController.addEventListener(Tabs.TAB_CHANGE_EVENT, () => {
+            const oldPlayer = this.player == this.midiPlayback ? this.audioPlayback : this.midiPlayback;
+            oldPlayer.stop().then(() => {
+                if (this.tabsController.currentTab?.type === 'MIDITrack') {
+                    (this.player as MIDITimedPlayback).data = (this.tabsController.currentTab as MIDITrackTabConfig).track.sequence;
+                } else if (this.tabsController.currentTab?.type === 'AudioTrack'){
+                    (this.player as AudioPlayback).data = (this.tabsController.currentTab as AudioTrackTabConfig).buffer;
+                }
+           });
+        });
     }
 
-    togglePlayback() {
-        this.isPlaying = !this.isPlaying;
-        if (this.isPlaying) {
-            this.playback.sequence = this.app.currentTrack?.sequence || [];
-            this.playback.play();
+
+    get canPlay() {
+        return this.tabsController.currentTab?.type === 'MIDITrack' || this.tabsController.currentTab?.type === 'AudioTrack';
+    }
+
+    get player() {
+        return this.tabsController.currentTab?.type === 'MIDITrack' ? this.midiPlayback : this.audioPlayback;
+    }
+
+    async togglePlayback() {
+        if (!this.player.isPlaying) {
+            this.player.play();
+            this.updatePlaybackTime();
         } else {
-            this.playback.pause();
+            await this.player.pause();
+        }
+    }
+
+    updatePlaybackTime() {
+        if (this.player.isPlaying) {
+            if (this.app.timelineRef.value) {
+                this.app.timelineRef.value.currentTime = this.player.currentTime;
+                this.requestUpdate();
+            }
+            requestAnimationFrame(this.updatePlaybackTime.bind(this));
         }
     }
 
@@ -54,28 +89,28 @@ export class PlaybackControls extends LitElement {
 
             switch (zoomOption) {
                 case 'Fit entire sequence (100%)':
-                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.app.currentTrack?.duration || 0) + 1);
+                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1);
                     break;
                 case '50%':
-                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.app.currentTrack?.duration || 0) + 1) * 2;
+                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1) * 2;
                     break;
                 case '25%':
-                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.app.currentTrack?.duration || 0) + 1) * 4;
+                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1) * 4;
                     break;
                 case '10%':
-                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.app.currentTrack?.duration || 0) + 1) * 10;
+                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1) * 10;
                     break;
                 case 'One Measure':
-                    this.app.pixelsPerBeat = tWidth / (this.app.currentTrack?.timeSignature.numerator|| 0);
+                    this.app.pixelsPerBeat = tWidth / ((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature.numerator|| 0);
                     break;
                 case 'Two Measures':
-                    this.app.pixelsPerBeat = tWidth / (this.app.currentTrack?.timeSignature.numerator|| 0) * 0.5;
+                    this.app.pixelsPerBeat = tWidth / ((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature.numerator|| 0) * 0.5;
                     break;
                 case 'Four Measures':
-                    this.app.pixelsPerBeat = tWidth / (this.app.currentTrack?.timeSignature.numerator|| 0) * 0.25;
+                    this.app.pixelsPerBeat = tWidth / ((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature.numerator|| 0) * 0.25;
                     break;
                 case 'Eight Measures':
-                    this.app.pixelsPerBeat = tWidth / (this.app.currentTrack?.timeSignature.numerator|| 0) * 0.125;
+                    this.app.pixelsPerBeat = tWidth / ((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature.numerator|| 0) * 0.125;
                     break;
             }
         }
@@ -85,7 +120,7 @@ export class PlaybackControls extends LitElement {
             const timeline = this.app.timelineRef.value;
             if (timeline) {
                 const tWidth = timeline.contentWidth;
-                return Math.round(this.app.pixelsPerBeat / (tWidth / (Math.ceil(this.app.currentTrack?.duration || 0) + 1)));
+                return Math.round(this.app.pixelsPerBeat / (tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1)));
             }
             return 100;
     }
@@ -98,21 +133,31 @@ export class PlaybackControls extends LitElement {
         this.app.pixelsPerBeat *= 0.95;
     }
 
+    formatTime(seconds: number) {
+        const dateObj = new Date(seconds * 1000);
+        const minutes = dateObj.getUTCMinutes();
+        seconds = dateObj.getSeconds();
+
+        return minutes.toString().padStart(2, '0')
+            + ':' + seconds.toString().padStart(2, '0');
+    }
+
     handleZoomSlider(event: Event) {
         const timeline = this.app.timelineRef.value;
         if (timeline) {
             const tWidth = timeline.contentWidth;
-            this.app.pixelsPerBeat = tWidth / (Math.ceil(this.app.currentTrack?.duration || 0) + 1) * Number((event.target as HTMLInputElement).value);
+            this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1) * Number((event.target as HTMLInputElement).value);
         }
     }
 
     render() {
         return html`
             <div class="start section">
-                ${this.app.currentTrack ? html`<div>
-                    <h3>${this.app.currentTrack?.name || 'Untitled Track'}</h3>
-                    <sp-field-label>Time Signature: ${this.app.currentTrack?.timeSignature ? formatTimeSignature(this.app.currentTrack.timeSignature) : ' / '}</sp-field-label>
+                ${this.tabsController.currentTab ? html`<div>
+                    <h3>${this.tabsController.currentTab?.name || 'Untitled Track'}</h3>
+                    <sp-field-label>Time Signature: ${(this.tabsController.currentTab as MIDITrackTabConfig)?.track?.timeSignature ? formatTimeSignature((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature) : ' / '}</sp-field-label>
                 </div>` : html`<h3>No track loaded</h3>`}
+                <sp-field-label>${this.formatTime(this.player.currentTime)}</sp-field-label>
                 <div>
                     <sp-field-label>BPM</sp-field-label>
                     <sp-number-field
@@ -122,7 +167,7 @@ export class PlaybackControls extends LitElement {
                                 //const input = event.target as HTMLInputElement;
                                // this.app.currentTrack.BPM = Number(input.value);
                             }}
-                            value=${this.app.currentTrack?.BPM || 120}
+                            value=${/*this.app.currentTrack?.BPM ||*/ 120}
                             size="m"
                     ></sp-number-field>
                 </div>
@@ -130,10 +175,10 @@ export class PlaybackControls extends LitElement {
             <div class="middle section">
                 <sp-action-button
                         aria-label="Play button"
-                        ?disabled=${this.canPlay}
+                        ?disabled=${!this.canPlay}
                         quiet
                         @click=${this.togglePlayback.bind(this)}>
-                    ${this.playback.isPlaying ? html`<sp-icon-pause slot="icon"></sp-icon-pause>` : html`<sp-icon-play slot="icon"></sp-icon-play>`}
+                    ${this.player.isPlaying ? html`<sp-icon-pause slot="icon"></sp-icon-pause>` : html`<sp-icon-play slot="icon"></sp-icon-play>`}
                 </sp-action-button>
             </div>
                 

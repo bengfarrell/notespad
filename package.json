@@ -2,36 +2,39 @@
   "name": "notespad",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "build": "./node_modules/.bin/tsc",
-    "build:watch": "./node_modules/.bin/tsc --watch",
     "lint": "npm run lint:eslint",
     "lint:eslint": "eslint 'src/**/*.ts'",
     "lint:lit-analyzer": "lit-analyzer",
     "format": "prettier \\\\\\\"**/*.{cjs,html,js,json,md,ts}\\\\\\\" --write",
-    "serve": "npm run build:watch & wds --watch",
-    "serve:prod": "MODE=prod npm run serve"
+    "dev": "vite --open",
+    "preview": "vite preview",
+    "build": "vite build"
   },
   "files": [],
   "repository": {
     "type": "git",
-    "url": "https://github.com/bengfarrell/midi-sequence-timeline.git"
+    "url": "https://github.com/bengfarrell/notespad.git"
   },
   "dependencies": {
     "@spectrum-web-components/bundle": "^0.48.1",
+    "@spotify/basic-pitch": "^1.0.1",
+    "@tonejs/midi": "^2.0.28",
     "@types/prismjs": "^1.26.5",
+    "demucs-wasm": "^0.1.5",
     "lit": "^3.2.0",
-    "prismjs": "^1.29.0"
+    "music-timeline": "^0.3.1",
+    "prismjs": "^1.29.0",
+    "@breezystack/lamejs": "^1.2.7"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.25.0",
     "@typescript-eslint/parser": "^5.25.0",
-    "@web/dev-server": "^0.1.31",
     "eslint": "^8.15.0",
-    "midi-sequence-timeline": "^0.1.2",
     "prettier": "^2.6.2",
-    "typescript": "~5.2.0"
+    "typescript": "~5.2.0",
+    "vite": "^5.0.0"
   }
 }

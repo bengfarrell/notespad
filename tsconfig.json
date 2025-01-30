@@ -5,7 +5,7 @@
     "lib": ["es2021", "DOM", "DOM.Iterable"],
     "sourceMap": true,
     "inlineSources": true,
-    "outDir": "./src",
+    "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
     "noUnusedLocals": true,
@@ -24,10 +24,10 @@
         "name": "ts-lit-plugin",
         "strict": true
       }
-    ]
-  },
-  "paths": {
-    "*": ["./src/*", "./node_modules/@types/*"]
+    ],
+    "paths": {
+      "*": ["./src/*", "./node_modules/@types/*"]
+    }
   },
   "include": [
     "src/**/*.ts",

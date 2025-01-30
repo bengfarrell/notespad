@@ -12,22 +12,31 @@ export const style = css`
         background-color: #1e1e1e;
     }
 
-    ms-timeline,
-    #no-tracks-placeholder {
+    #tab-container {
         margin: 0 15px 0 15px;
         width: calc(100% - 30px);
         height: calc(100% - 240px);
         display: flex;
-        background-color: #3a3a3a;
-    }
-
-    #no-tracks-placeholder {
-        opacity: 0.25;
-        border-radius: 8px;
-        background-color: #e5e5f7;
-        background: repeating-linear-gradient(-45deg, #2f2f2f, #2f2f2f 5px, #808080 5px, #808080 25px);
     }
     
+    #tab {
+        width: calc(100% - 250px);
+        border: solid #6a6a6a 1px;
+        border-radius: 8px;
+        background-color: #3a3a3a;
+    }
+    
+    #panel {
+        width: 250px;
+        border: solid #6a6a6a 1px;
+        border-radius: 8px;
+        background-color: #3a3a3a;
+        margin-left: 5px;
+        padding: 10px;
+        height: calc(100% - 30px);
+        overflow-y: auto;
+    }
+
     notespad-tools-bar {
         width: calc(100% - 25px);
     }
@@ -38,13 +47,12 @@ export const style = css`
         justify-content: flex-end;
     }
     
-    #file-tray {
-        width: calc(100% - 25px);
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    #file-tray sp-button {
-        margin-left: 10px;
+    sp-toast {
+        position: absolute;
+        width: 100%;
+        top: 20px;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
     }
 `;
