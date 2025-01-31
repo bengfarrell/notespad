@@ -2,6 +2,7 @@ import { html } from 'lit';
 
 import '../components/filetabs/emptytab.js';
 import '../components/filetabs/midifiletab.js';
+import '../components/filetabs/sonicpitracktab.js';
 import '../components/filetabs/miditracktab.js';
 import '../components/filetabs/audiotracktab.js';
 import '../components/filetabs/audiomultitracktab.js';
@@ -9,11 +10,12 @@ import '../components/filetabs/audiomultitracktab.js';
 import '../components/panels/emptypanel.js';
 import '../components/panels/audiotrackpanel.js';
 import '../components/panels/miditrackpanel.js';
+import '../components/panels/sonicpitrackpanel.js';
 
 import { MIDIFile, MIDITrack } from 'music-timeline';
 import { PitchDetectionOutput } from '../utils/audio.js';
 
-export type TabType =  'MIDIFile' | 'MIDITrack' | 'AudioTrack' | 'AudioMultiTrack' | 'Empty';
+export type TabType =  'MIDIFile' | 'MIDITrack' | 'AudioTrack' | 'AudioMultiTrack' | 'SonicPITrack' | 'Empty';
 export interface AudioTrack {
     name: string
     buffer: AudioBuffer;
@@ -58,6 +60,18 @@ export class AudioTrackTabConfig extends TabConfig {
     }
 }
 
+export class SonicPITrackTabConfig extends TabConfig {
+    get duration() {
+        return this.track.duration;
+    }
+    constructor(
+        name: string,
+        public track: MIDITrack) {
+        super('SonicPITrack', name);
+    }
+}
+
+
 export class MIDITrackTabConfig extends TabConfig {
     get duration() {
         return this.track.duration;
@@ -91,6 +105,9 @@ export const renderTab = (tab?: TabConfig) => {
         case 'MIDITrack':
             return html`<notespad-tab-miditrack id="tab" guid=${tab.guid}></notespad-tab-miditrack>`;
 
+        case 'SonicPITrack':
+            return html`<notespad-tab-sonicpitrack id="tab" guid=${tab.guid}></notespad-tab-sonicpitrack>`;
+
         case 'AudioTrack':
             return html`<notespad-tab-audiotrack id="tab" guid=${tab.guid}></notespad-tab-audiotrack>`;
 
@@ -112,6 +129,9 @@ export const renderPanel = (tab?: TabConfig) => {
 
         case 'MIDITrack':
             return html`<notespad-panel-miditrack id="panel" guid=${tab.guid}></notespad-panel-miditrack>`;
+
+        case 'SonicPITrack':
+            return html`<notespad-panel-sonicpitrack id="panel" guid=${tab.guid}></notespad-panel-sonicpitrack>`;
 
 
         default:

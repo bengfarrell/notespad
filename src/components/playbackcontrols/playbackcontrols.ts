@@ -17,12 +17,12 @@ import '@spectrum-web-components/slider/sp-slider.js';
 import '@spectrum-web-components/number-field/sp-number-field.js';
 
 import { formatTimeSignature, AppController } from '../../models/app.js';
-import { MIDITimedPlayback, Playback as MIDIPlayback } from 'music-timeline/playback/miditimedplayback.js';
-import { AudioPlayback, Playback as AudioTrackPlayback } from 'music-timeline/playback/audioplayback.js';
+import { Playback as MIDITrackPlayback } from 'music-timeline/playback/midiplayback.js';
+import { Playback as AudioTrackPlayback } from 'music-timeline/playback/audioplayback.js';
 
 import { style } from './playbackcontrols.css.js';
-import { TabsController, Tabs } from '../../models/tabs';
-import { AudioTrackTabConfig, MIDITrackTabConfig } from '../../models/tabfactory';
+import { TabsController } from '../../models/tabs';
+import { MIDITrackTabConfig } from '../../models/tabfactory';
 
 @customElement('notespad-playback-controls')
 export class PlaybackControls extends LitElement {
@@ -34,24 +34,8 @@ export class PlaybackControls extends LitElement {
 
     app = AppController.attachHost(this);
 
-    tabPlaying?: string
-
-    midiPlayback = MIDIPlayback.attachHost(this);
+    midiPlayback = MIDITrackPlayback.attachHost(this);
     audioPlayback = AudioTrackPlayback.attachHost(this);
-
-    constructor() {
-        super();
-        this.tabsController.addEventListener(Tabs.TAB_CHANGE_EVENT, () => {
-            const oldPlayer = this.player == this.midiPlayback ? this.audioPlayback : this.midiPlayback;
-            oldPlayer.stop().then(() => {
-                if (this.tabsController.currentTab?.type === 'MIDITrack') {
-                    (this.player as MIDITimedPlayback).data = (this.tabsController.currentTab as MIDITrackTabConfig).track.sequence;
-                } else if (this.tabsController.currentTab?.type === 'AudioTrack'){
-                    (this.player as AudioPlayback).data = (this.tabsController.currentTab as AudioTrackTabConfig).buffer;
-                }
-           });
-        });
-    }
 
 
     get canPlay() {

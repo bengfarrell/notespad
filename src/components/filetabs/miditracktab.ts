@@ -5,7 +5,7 @@ import { AppController } from '../../models/app.js';
 import { TabsController } from '../../models/tabs.js';
 import { RangeSelectEvent, TimelineEvent } from 'music-timeline';
 import 'music-timeline';
-import { Playback } from 'music-timeline/playback/miditimedplayback.js';
+import { Playback } from 'music-timeline/playback/midiplayback.js';
 import { MIDITrackTabConfig } from '../../models/tabfactory';
 
 @customElement('notespad-tab-miditrack')

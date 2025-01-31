@@ -33,7 +33,7 @@ export const style = css`
         background-color: #3a3a3a;
         margin-left: 5px;
         padding: 10px;
-        height: calc(100% - 30px);
+        height: calc(100% - 22px);
         overflow-y: auto;
     }
 

@@ -11,8 +11,8 @@ import '@spectrum-web-components/icons-workflow/icons/sp-icon-add.js';
 import '@spectrum-web-components/icons-workflow/icons/sp-icon-remove.js';
 
 import { TabsController } from '../../models/tabs.js';
-//import { MIDITimedPlayback, Playback } from 'music-timeline/playback/miditimedplayback';
-import { MIDITrackTabConfig } from '../../models/tabfactory';
+import { Playback } from 'music-timeline/playback/midiplayback.js';
+import { MIDITrackTabConfig, SonicPITrackTabConfig } from '../../models/tabfactory';
 import { defaultPitchDetectOptions, pitchDetectToMIDITrack } from '../../utils/audio.js';
 import { AppController } from '../../models/app.js';
 
@@ -46,7 +46,7 @@ export class MIDITrackPanel extends LitElement {
 
     protected tabsController = TabsController.attachHost(this);
     protected appController = AppController.attachHost(this);
-    //protected playbackController = Playback.attachHost(this);
+    protected playbackController = Playback.attachHost(this);
 
     handleInstrumentChange(e: Event) {
         const instr = (e.target as HTMLInputElement).value;
@@ -95,20 +95,11 @@ export class MIDITrackPanel extends LitElement {
             melodiaTrick: this.melodiaTrick,
             energyTolerance: this.energyTolerance
         }, this.transposed);
-        console.log({
-            segmentThreshold: this.segmentThreshold,
-            confidenceThreshold: this.confidenceThreshold,
-            minNoteLength: this.minNoteLength,
-            inferOnsets: this.inferOnset,
-            melodiaTrick: this.melodiaTrick,
-            energyTolerance: this.energyTolerance
-        })
-        tabData.track.refresh();
 
         tabData.track = track;
         if (this.appController.timelineRef?.value) {
             this.appController.timelineRef.value.midiTrack = track;
-            //(this.playbackController as MIDITimedPlayback).data = track.sequence;
+            this.playbackController.data = track.sequence;
         }
     }
 
@@ -118,21 +109,24 @@ export class MIDITrackPanel extends LitElement {
         tabData.track.events.forEach((event) => {
             event.note += semitones;
         });
-        tabData.track.refresh();
-
-        // TODO: look into how well this works without track setting
-        const clone = tabData.track.clone();
-        tabData.track = clone;
-
+        tabData.track.processTrack();
         if (this.appController.timelineRef?.value) {
-            this.appController.timelineRef.value.midiTrack = clone;
-            //(this.playbackController as MIDITimedPlayback).data = clone.sequence;
+            this.appController.timelineRef.value.refresh();
+            this.playbackController.data = tabData.track.sequence;
         }
+    }
+
+    sonicPIExport() {
+        const tabData = this.tabsController.findTabByGUID(this.guid) as MIDITrackTabConfig;
+        TabsController.createTab(
+            new SonicPITrackTabConfig(tabData.name + '-sonic-pi', tabData.track));
     }
 
     render() {
         const tabData = this.tabsController.findTabByGUID(this.guid) as MIDITrackTabConfig;
         return html`
+            <sp-button @click=${this.sonicPIExport.bind(this)}>Export SonicPI</sp-button>
+            <br />
             <sp-field-label>Instrument</sp-field-label>
             <sp-picker @change=${this.handleInstrumentChange.bind(this)} size="m" value="poly-synth" label="Instrument">
                 <sp-menu-item value="poly-synth">Poly Synth</sp-menu-item>

@@ -9,9 +9,10 @@
     "lint:eslint": "eslint 'src/**/*.ts'",
     "lint:lit-analyzer": "lit-analyzer",
     "format": "prettier \\\\\\\"**/*.{cjs,html,js,json,md,ts}\\\\\\\" --write",
-    "dev": "vite --open",
+    "dev": "npm run clean:cache && vite --open",
     "preview": "vite preview",
-    "build": "vite build"
+    "build": "vite build",
+    "clean:cache": "rimraf node_modules/.vite"
   },
   "files": [],
   "repository": {
@@ -25,7 +26,7 @@
     "@types/prismjs": "^1.26.5",
     "demucs-wasm": "^0.1.5",
     "lit": "^3.2.0",
-    "music-timeline": "^0.3.1",
+    "music-timeline": "^0.3.2",
     "prismjs": "^1.29.0",
     "@breezystack/lamejs": "^1.2.7"
   },

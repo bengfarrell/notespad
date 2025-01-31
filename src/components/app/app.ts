@@ -13,6 +13,8 @@ import { style } from './app.css.js';
 import '../playbackcontrols/playbackcontrols.js';
 
 import { TabsController } from '../../models/tabs.js';
+import { Playback as AudioPlayback } from 'music-timeline/playback/audioplayback.js';
+import { Playback as MIDIPlayback } from 'music-timeline/playback/midiplayback.js';
 
 import '../filetabs/filetabs.js';
 import '../tools-bar/tools-bar.js';
@@ -31,6 +33,8 @@ export class App extends LitElement {
   static styles = style;
 
   tabsController = TabsController.attachHost(this);
+  midiPlaybackController = MIDIPlayback.attachHost(this);
+  audioPlaybackController = AudioPlayback.attachHost(this);
 
   @query('sp-toast')
   protected toast?: Toast;
@@ -40,6 +44,8 @@ export class App extends LitElement {
 
   constructor() {
       super();
+      this.midiPlaybackController.isLooping = true;
+      this.audioPlaybackController.isLooping = true;
       this.addEventListener('alert',((e: GlobalAlertEvent) => {
          this.toastMessage = e.message;
          if (this.toast) this.toast.open = true;

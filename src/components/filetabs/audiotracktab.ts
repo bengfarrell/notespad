@@ -29,7 +29,7 @@ export class AudioTrackTab extends LitElement {
         if (!tabData) return undefined;
 
         return html`<mt-audio
-                waveformcolor="#00ff0044"
+                waveformcolor="#ffffff44"
                   @seek=${(e: TimelineEvent) => this.playbackController.seek(e.time)}
                   @rangeselect=${(e: RangeSelectEvent) => {
             if (e.range) {

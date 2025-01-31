@@ -1,6 +1,8 @@
 import { ReactiveController, ReactiveElement } from 'lit';
 import { EventEmitter } from '../utils/eventemitter.js';
-import { TabConfig } from './tabfactory.js';
+import { AudioTrackTabConfig, MIDITrackTabConfig, TabConfig } from './tabfactory.js';
+import { Playback as AudioPlayback } from 'music-timeline/playback/audioplayback.js';
+import { Playback as MIDIPlayback } from 'music-timeline/playback/midiplayback.js';
 
 export class Tabs extends EventEmitter implements ReactiveController {
     static TAB_CHANGE_EVENT = 'tabchange';
@@ -27,7 +29,19 @@ export class Tabs extends EventEmitter implements ReactiveController {
 
     set currentTabIndex(index: number) {
         this._currentTabIndex = index;
+        this.refreshPlayer();
         this.dispatchEvent(new Event(Tabs.TAB_CHANGE_EVENT));
+    }
+
+    async refreshPlayer() {
+        await AudioPlayback.stop();
+        await MIDIPlayback.stop();
+
+        if (this.currentTab?.type === 'MIDITrack') {
+            MIDIPlayback.data = (this.currentTab as MIDITrackTabConfig).track.sequence;
+        } else if (this.currentTab?.type === 'AudioTrack'){
+            AudioPlayback.data = (this.currentTab as AudioTrackTabConfig).buffer;
+        }
     }
 
     get currentTabIndex() {

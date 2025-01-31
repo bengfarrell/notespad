@@ -43,6 +43,7 @@ export class AudioMultiTrackTab extends LitElement {
         li .thumb-container {
             width: 100%;
             overflow-x: auto;
+            overflow-y: hidden;
             height: 32px;
         }
         

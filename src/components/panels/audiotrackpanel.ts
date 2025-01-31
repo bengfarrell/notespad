@@ -168,7 +168,7 @@ export class AudioTrackPanel extends LitElement {
 
     render() {
         return html`
-            <sp-button @click=${this.handleMultiTrack.bind(this)}>Test</sp-button>
+            <!--<sp-button @click=${this.handleMultiTrack.bind(this)}>Test</sp-button>-->
             <sp-button @click=${() => this.handleSeparate('demucs-free-6s')}>Separate all</sp-button>
             <sp-button @click=${() => this.handleSeparate('demucs-karaoke')}>Separate vocals only</sp-button>
             <sp-button @click=${this.handlePitch.bind(this)}>Pitch</sp-button>
