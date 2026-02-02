@@ -1,6 +1,7 @@
 import { addPitchBendsToNoteEvents, BasicPitch, noteFramesToTime, outputToNotesPoly } from '@spotify/basic-pitch/esm';
 import { NoteEventTime } from '@spotify/basic-pitch';
 import { MIDITrack, NoteEvent } from 'music-timeline';
+import { guess } from 'web-audio-beat-detector';
 
 export const changeSampleRate = async (buffer: AudioBuffer, sampleRate: number, numChannels?: number) => {
     if (buffer.sampleRate === sampleRate) {
@@ -42,12 +43,12 @@ export const trimAudioBuffer = (buffer: AudioBuffer, startTime: number, endTime:
     // Create a new AudioBuffer for the trimmed audio
     const trimmedBuffer = (new AudioContext).createBuffer(
         channels,
-        (endFrame - startFrame),
+        (Math.floor(endFrame) - Math.floor(startFrame)),
         sampleRate
     );
 
     for (let channel = 0; channel < channels; channel++) {
-        const sourceData = buffer.getChannelData(channel).subarray(startFrame, endFrame);
+        const sourceData = buffer.getChannelData(channel).subarray(Math.floor(startFrame), Math.floor(endFrame));
         trimmedBuffer.getChannelData(channel).set(sourceData);
     }
 
@@ -73,9 +74,9 @@ export interface PitchDetectOptions {
 }
 
 export const defaultPitchDetectOptions = {
-    segmentThreshold: 0.25,
-    confidenceThreshold: 0.25,
-    minNoteLength: 5,
+    segmentThreshold: 0.5,
+    confidenceThreshold: 0.5,
+    minNoteLength: 11,
     inferOnsets: true,
     //maxFrequency?: number,
     //minFrequency?: number,
@@ -136,6 +137,20 @@ export const pitchDetectToMIDITrack = (
     track.timeMeta.division = 480;
     track.processTrack();
     return track;
+}
 
-
+export const calculateBPM = (buffer: AudioBuffer) => {
+    return new Promise<{ bpm: number, offset: number} | undefined>((resolve, reject) =>
+    {
+        if (buffer) {
+            guess(buffer)
+                .then(({ bpm, offset }) => {
+                    resolve({ bpm, offset });
+                })
+                .catch((err) => {
+                    console.log('BPM inference error', err);
+                    reject(undefined);
+                });
+        }
+    });
 }

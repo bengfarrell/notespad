@@ -92,7 +92,7 @@ export class EmptyTab extends LitElement {
                 const context = new AudioContext();
                 file.arrayBuffer().then((buffer) => {
                     context.decodeAudioData(buffer).then(audioBuffer => {
-                        TabsController.createTab(new AudioTrackTabConfig(file.name, audioBuffer));
+                        TabsController.createTab(new AudioTrackTabConfig(file.name, audioBuffer, true));
                     });
                 });
                 break;

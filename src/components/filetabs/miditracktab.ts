@@ -5,7 +5,7 @@ import { AppController } from '../../models/app.js';
 import { TabsController } from '../../models/tabs.js';
 import { RangeSelectEvent, TimelineEvent } from 'music-timeline';
 import 'music-timeline';
-import { Playback } from 'music-timeline/playback/midiplayback.js';
+import { Playback } from 'music-timeline/playback/midi.js';
 import { MIDITrackTabConfig } from '../../models/tabfactory';
 
 @customElement('notespad-tab-miditrack')
@@ -29,8 +29,10 @@ export class MIDIFileTab extends LitElement {
         if (!tabData) return undefined;
 
         return html`<mt-midi
-                  @seek=${(e: TimelineEvent) => this.playbackController.seek(e.time)}
-                  @rangeselect=${(e: RangeSelectEvent) => {
+                    beatspermeasure=${this.appController.beatsPerMeasure}
+                    beatsperminute=${this.appController.beatsPerMinute}
+                    @seek=${(e: TimelineEvent) => this.playbackController.seek(e.time)}
+                    @rangeselect=${(e: RangeSelectEvent) => {
                         if (e.range) {
                             this.playbackController.loop(...e.range as [number, number]);
                         } else {
@@ -38,8 +40,8 @@ export class MIDIFileTab extends LitElement {
                         }
                         this.appController.selectedRange = e.range;
                     }}
-                  ${ref(AppController.timelineRef)} 
-                  .midiTrack=${tabData.track}
-                  .currentTime=${this.playbackController.currentTime}></mt-midi>`;
+                    ${ref(AppController.timelineRef)} 
+                    .midiTrack=${tabData.track}
+                    .currentTime=${this.playbackController.currentTime}></mt-midi>`;
     }
 }

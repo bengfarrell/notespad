@@ -13,7 +13,7 @@ import '../components/panels/miditrackpanel.js';
 import '../components/panels/sonicpitrackpanel.js';
 
 import { MIDIFile, MIDITrack } from 'music-timeline';
-import { PitchDetectionOutput } from '../utils/audio.js';
+import { calculateBPM, PitchDetectionOutput } from '../utils/audio.js';
 
 export type TabType =  'MIDIFile' | 'MIDITrack' | 'AudioTrack' | 'AudioMultiTrack' | 'SonicPITrack' | 'Empty';
 export interface AudioTrack {
@@ -30,6 +30,8 @@ export class TabConfig {
         return 0;
     }
 
+    async initialize() {}
+
     constructor(type: TabType, name: string) {
         this.type = type;
         this.name = name;
@@ -38,7 +40,7 @@ export class TabConfig {
 }
 
 export class AudioMultiTrackTabConfig extends TabConfig {
-    tracks: { name: string, buffer: AudioBuffer }[];
+    tracks: { name: string, buffer: AudioBuffer, maxAmplitude?: number }[];
     trackThumbs: string[] = [];
 
     constructor(name: string, tracks: AudioTrack[]) {
@@ -49,14 +51,34 @@ export class AudioMultiTrackTabConfig extends TabConfig {
 
 export class AudioTrackTabConfig extends TabConfig {
     buffer: AudioBuffer;
+    BPM?: number;
+    beatOffset?: number;
+
+    protected inferBPM = false;
 
     get duration() {
         return this.buffer.duration;
     }
 
-    constructor(name: string, buffer: AudioBuffer) {
+    async initialize(): Promise<void> {
+        await super.initialize();
+        return new Promise((resolve) => {
+            if (this.inferBPM) {
+                calculateBPM(this.buffer).then((result) => {
+                    this.BPM = result?.bpm;
+                    this.beatOffset = result?.offset;
+                    resolve();
+                })
+            } else {
+                resolve();
+            }
+        });
+    }
+
+    constructor(name: string, buffer: AudioBuffer, inferBPM = false) {
         super('AudioTrack', name);
         this.buffer = buffer;
+        this.inferBPM = inferBPM;
     }
 }
 

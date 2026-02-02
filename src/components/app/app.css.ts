@@ -20,14 +20,14 @@ export const style = css`
     }
     
     #tab {
-        width: calc(100% - 250px);
+        width: calc(100% - 260px);
         border: solid #6a6a6a 1px;
         border-radius: 8px;
         background-color: #3a3a3a;
     }
     
     #panel {
-        width: 250px;
+        width: 260px;
         border: solid #6a6a6a 1px;
         border-radius: 8px;
         background-color: #3a3a3a;
@@ -42,9 +42,11 @@ export const style = css`
     }
 
     notespad-file-tabs {
-        width: calc(100% - 25px);
+        width: calc(100% - 36px);
+        padding-left: 18px;
+        padding-right: 18px;
         display: flex;
-        justify-content: flex-end;
+        justify-content: flex-start;
     }
     
     sp-toast {

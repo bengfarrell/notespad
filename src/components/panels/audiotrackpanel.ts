@@ -14,6 +14,9 @@ import { defaultPitchDetectOptions, extractPitch, pitchDetectToMIDITrack, trimAu
 import { AudioMultiTrackTabConfig, AudioTrackTabConfig, MIDITrackTabConfig } from '../../models/tabfactory.js';
 import * as lame from '@breezystack/lamejs';
 
+
+const DEMUX_MODEL_PATH = './models/'; // 'https://d3pt2wmrvq3ftf.cloudfront.net/demucs/models/'
+
 @customElement('notespad-panel-audiotrack')
 export class AudioTrackPanel extends LitElement {
     static styles = css``;
@@ -39,7 +42,7 @@ export class AudioTrackPanel extends LitElement {
                 this.appController.selectedRange[1]) : tabData.buffer;
 
         // Separate the audio track from the timeline
-        const dmx = new Demucs(model, './workers/worker.js', 'https://d3pt2wmrvq3ftf.cloudfront.net/demucs/models/');
+        const dmx = new Demucs(model, './workers/worker.js', DEMUX_MODEL_PATH);
         const leftChannel = buffer.getChannelData(0);
         const rightChannel = buffer.getChannelData(1);
 

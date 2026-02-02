@@ -8,113 +8,59 @@ import '@spectrum-web-components/icons-workflow/icons/sp-icon-play.js';
 import '@spectrum-web-components/icons-workflow/icons/sp-icon-pause.js';
 import '@spectrum-web-components/icons-workflow/icons/sp-icon-zoom-in.js';
 import '@spectrum-web-components/icons-workflow/icons/sp-icon-zoom-out.js';
+import '@spectrum-web-components/icons-workflow/icons/sp-icon-chevron-down.js';
 import '@spectrum-web-components/menu/sp-menu-item.js';
 import '@spectrum-web-components/field-label/sp-field-label.js';
 import '@spectrum-web-components/menu/sp-menu.js';
 import '@spectrum-web-components/menu/sp-menu-divider.js';
-import '@spectrum-web-components/picker/sp-picker.js';
+import '@spectrum-web-components/action-menu/sync/sp-action-menu.js';
 import '@spectrum-web-components/slider/sp-slider.js';
 import '@spectrum-web-components/number-field/sp-number-field.js';
+import '@spectrum-web-components/switch/sp-switch.js';
 
-import { formatTimeSignature, AppController } from '../../models/app.js';
-import { Playback as MIDITrackPlayback } from 'music-timeline/playback/midiplayback.js';
-import { Playback as AudioTrackPlayback } from 'music-timeline/playback/audioplayback.js';
+import { AppController } from '../../models/app.js';
 
 import { style } from './playbackcontrols.css.js';
-import { TabsController } from '../../models/tabs';
-import { MIDITrackTabConfig } from '../../models/tabfactory';
+import { TabsController } from '../../models/tabs.js';
+import { Checkbox } from '@spectrum-web-components/bundle';
 
 @customElement('notespad-playback-controls')
 export class PlaybackControls extends LitElement {
     static styles = style;
 
     protected tabsController = TabsController.attachHost(this);
+    protected appController = AppController.attachHost(this);
 
-    isPlaying = false;
+    protected useMetronome = false;
 
     app = AppController.attachHost(this);
 
-    midiPlayback = MIDITrackPlayback.attachHost(this);
-    audioPlayback = AudioTrackPlayback.attachHost(this);
-
-
-    get canPlay() {
-        return this.tabsController.currentTab?.type === 'MIDITrack' || this.tabsController.currentTab?.type === 'AudioTrack';
-    }
-
-    get player() {
-        return this.tabsController.currentTab?.type === 'MIDITrack' ? this.midiPlayback : this.audioPlayback;
-    }
-
     async togglePlayback() {
-        if (!this.player.isPlaying) {
-            this.player.play();
-            this.updatePlaybackTime();
+        if (!this.app.isPlaying) {
+            this.app.player.play(this.useMetronome);
+            this.app.updatePlaybackTime();
         } else {
-            await this.player.pause();
+            await this.app.player.pause();
         }
-    }
-
-    updatePlaybackTime() {
-        if (this.player.isPlaying) {
-            if (this.app.timelineRef.value) {
-                this.app.timelineRef.value.currentTime = this.player.currentTime;
-                this.requestUpdate();
-            }
-            requestAnimationFrame(this.updatePlaybackTime.bind(this));
-        }
+        this.requestUpdate();
     }
 
     setZoomLevel(event: Event) {
-        const timeline = this.app.timelineRef.value;
-        if (timeline) {
-            const tWidth = timeline.contentWidth;
-            const zoomOption = (event.target as HTMLInputElement).value;
-
-            switch (zoomOption) {
-                case 'Fit entire sequence (100%)':
-                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1);
-                    break;
-                case '50%':
-                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1) * 2;
-                    break;
-                case '25%':
-                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1) * 4;
-                    break;
-                case '10%':
-                    this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1) * 10;
-                    break;
-                case 'One Measure':
-                    this.app.pixelsPerBeat = tWidth / ((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature.numerator|| 0);
-                    break;
-                case 'Two Measures':
-                    this.app.pixelsPerBeat = tWidth / ((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature.numerator|| 0) * 0.5;
-                    break;
-                case 'Four Measures':
-                    this.app.pixelsPerBeat = tWidth / ((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature.numerator|| 0) * 0.25;
-                    break;
-                case 'Eight Measures':
-                    this.app.pixelsPerBeat = tWidth / ((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature.numerator|| 0) * 0.125;
-                    break;
-            }
+        const zoomType = (event.target as HTMLInputElement).value.split('-')[0];
+        const zoomAmount = Number((event.target as HTMLInputElement).value.split('-')[1]);
+        if (zoomType === 'measure') {
+            this.app.zoomByMeasure(zoomAmount);
+        } else {
+            this.app.zoomTo(zoomAmount);
         }
     }
 
-    get zoomPercentage() {
-            const timeline = this.app.timelineRef.value;
-            if (timeline) {
-                const tWidth = timeline.contentWidth;
-                return Math.round(this.app.pixelsPerBeat / (tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1)));
-            }
-            return 100;
-    }
-
     zoomIn() {
-        this.app.pixelsPerBeat *= 1.5;
+        this.app.zoomIn(5);
     }
 
     zoomOut() {
-        this.app.pixelsPerBeat *= 0.95;
+        this.app.zoomOut(5);
     }
 
     formatTime(seconds: number) {
@@ -127,75 +73,109 @@ export class PlaybackControls extends LitElement {
     }
 
     handleZoomSlider(event: Event) {
-        const timeline = this.app.timelineRef.value;
-        if (timeline) {
-            const tWidth = timeline.contentWidth;
-            this.app.pixelsPerBeat = tWidth / (Math.ceil(this.tabsController.currentTab?.duration || 0) + 1) * Number((event.target as HTMLInputElement).value);
-        }
+        this.app.zoomTo(Number((event.target as HTMLInputElement).value));
     }
 
     render() {
         return html`
-            <div class="start section">
-                ${this.tabsController.currentTab ? html`<div>
-                    <h3>${this.tabsController.currentTab?.name || 'Untitled Track'}</h3>
-                    <sp-field-label>Time Signature: ${(this.tabsController.currentTab as MIDITrackTabConfig)?.track?.timeSignature ? formatTimeSignature((this.tabsController.currentTab as MIDITrackTabConfig)?.track.timeSignature) : ' / '}</sp-field-label>
-                </div>` : html`<h3>No track loaded</h3>`}
-                <sp-field-label>${this.formatTime(this.player.currentTime)}</sp-field-label>
-                <div>
-                    <sp-field-label>BPM</sp-field-label>
-                    <sp-number-field
-                            ?disabled=${this.canPlay}
-                            label="BPM"
-                            @input=${(_event: Event) => {
-                                //const input = event.target as HTMLInputElement;
-                               // this.app.currentTrack.BPM = Number(input.value);
-                            }}
-                            value=${/*this.app.currentTrack?.BPM ||*/ 120}
-                            size="m"
-                    ></sp-number-field>
+            <div class="start section well">
+                <div class="row">
+                    <div class="grid-item">
+                        <sp-field-label>BPM</sp-field-label>
+                        <sp-number-field
+                                label="BPM"
+                                id="bpm"
+                                hide-stepper
+                                @input=${(event: Event) => {
+                                    const input = event.target as HTMLInputElement;
+                                    this.appController.beatsPerMinute = Number(input.value);
+                                }}
+                                value=${this.appController.beatsPerMinute}
+                                size="m"
+                        ></sp-number-field>
+                    </div>
+    
+                    <div class="grid-item time-signature">
+                        <sp-field-label>Time Signature</sp-field-label>
+                        <div class="row"><sp-number-field
+                                label="Time Signature"
+                                id="time-signature-numerator"
+                                hide-stepper
+                                @input=${(event: Event) => {
+                                    const input = event.target as HTMLInputElement;
+                                    this.appController.beatsPerMeasure = Number(input.value);
+                                }}
+                                value=${this.appController.beatsPerMeasure}
+                                size="m"
+                        ></sp-number-field><span id="time-signature-denominator">/ 4</span></div>
+                    </div>
+                    <div class="grid-item">
+                        <sp-field-label>Grid Offset</sp-field-label>
+                        <sp-number-field
+                                label="Grid Offset"
+                                id="grid-offset"
+                                hide-stepper
+                                @input=${(event: Event) => {
+                                    const input = event.target as HTMLInputElement;
+                                    this.appController.beatOffsetSeconds = Number(input.value);
+                                }}
+                                value=${this.appController.beatOffsetSeconds}
+                                size="m"></sp-number-field>
+                    </div>
+                    <sp-switch style="margin-top: 5px;" size="s" @change=${(event: InputEvent) => this.useMetronome = (event.target as Checkbox).checked}><span class="use-metronome-label">use metronome</span></sp-switch>
                 </div>
             </div>
             <div class="middle section">
                 <sp-action-button
                         aria-label="Play button"
-                        ?disabled=${!this.canPlay}
+                        ?disabled=${!this.app.canPlay}
                         quiet
                         @click=${this.togglePlayback.bind(this)}>
-                    ${this.player.isPlaying ? html`<sp-icon-pause slot="icon"></sp-icon-pause>` : html`<sp-icon-play slot="icon"></sp-icon-play>`}
+                    ${this.app.isPlaying ? html`<sp-icon-pause slot="icon"></sp-icon-pause>` : html`<sp-icon-play slot="icon"></sp-icon-play>`}
                 </sp-action-button>
+                ${this.tabsController.currentTab ? html`
+                    <h3>${this.tabsController.currentTab?.name || 'Untitled Track'}</h3>` : html`<h3 class="disabled">No track loaded</h3>`}
+                <sp-field-label class="${this.tabsController.currentTab ? '' : 'disabled'}">${this.formatTime(this.app.player.currentTime)} / ${this.formatTime(this.app.player.duration)}</sp-field-label>
             </div>
                 
-            <div class="end section">
-                <div>
-                    <sp-field-label ?disabled=${this.canPlay}>Zoom</sp-field-label>
-                    <sp-picker ?disabled=${this.canPlay} @change=${this.setZoomLevel.bind(this)}>
-                        <sp-menu-item>Fit entire sequence (100%)</sp-menu-item>
-                        <sp-menu-item>50%</sp-menu-item>
-                        <sp-menu-item>25%</sp-menu-item>
-                        <sp-menu-item>10%</sp-menu-item>
+            <div class="end section well">
+                <div class="zoom-selector">
+                    <sp-field-label ?disabled=${!this.app.canPlay}>Zoom</sp-field-label>
+                    <sp-action-menu size="m" ?disabled=${!this.app.canPlay} @change=${this.setZoomLevel.bind(this)}>
+                        <span slot="label">${this.app.zoomPercent}%</span>
+                        <sp-icon-chevron-down slot="icon"></sp-icon-chevron-down>
+                        <sp-menu-item value="percent-100">100% (Fit entire sequence)</sp-menu-item>
+                        <sp-menu-item value="percent-125">125%</sp-menu-item>
+                        <sp-menu-item value="percent-150">150%</sp-menu-item>
+                        <sp-menu-item value="percent-175">175%</sp-menu-item>
+                        <sp-menu-item value="percent-200">200%</sp-menu-item>
+                        <sp-menu-item value="percent-250">250%</sp-menu-item>
+                        <sp-menu-item value="percent-300">300%</sp-menu-item>
+                        <sp-menu-item value="percent-400">400%</sp-menu-item>
+                        <sp-menu-item value="percent-600">600%</sp-menu-item>
+                        <sp-menu-item value="percent-1000">1000%</sp-menu-item>
                         <sp-menu-divider></sp-menu-divider>
-                        <sp-menu-item>One Measure</sp-menu-item>
-                        <sp-menu-item>Two Measures</sp-menu-item>
-                        <sp-menu-item>Four Measures</sp-menu-item>
-                        <sp-menu-item>Eight Measures</sp-menu-item>
-                    </sp-picker>
+                        <sp-menu-item value=${this.app.beatsPerMeasure * this.app.beatsPerMinute}>One Measure</sp-menu-item>
+                        <sp-menu-item value="measure-2">Two Measures</sp-menu-item>
+                        <sp-menu-item value="measure-4">Four Measures</sp-menu-item>
+                        <sp-menu-item value="measure-8">Eight Measures</sp-menu-item>
+                    </sp-action-menu>
                 </div>
                 <sp-action-button
                         aria-label="Zoom out"
-                        ?disabled=${this.canPlay}
+                        ?disabled=${!this.app.canPlay}
                         quiet
                         @click=${this.zoomOut.bind(this)}>
                     <sp-icon-zoom-out slot="icon"></sp-icon-zoom-out>
                 </sp-action-button>
                 <sp-slider 
-                        value=${this.zoomPercentage} 
+                        value=${this.app.zoomPercent}
                         @input=${this.handleZoomSlider.bind(this)}
-                        ?disabled=${this.canPlay}
-                        label-visibility="none" min="1" max="90"></sp-slider>
+                        ?disabled=${!this.app.canPlay}
+                        label-visibility="none" min="1" max="2000"></sp-slider>
                 <sp-action-button
                         aria-label="Zoom out"
-                        ?disabled=${this.canPlay}
+                        ?disabled=${!this.app.canPlay}
                         quiet
                         @click=${this.zoomIn.bind(this)}>
                     <sp-icon-zoom-in slot="icon"></sp-icon-zoom-in>

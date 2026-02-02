@@ -1,8 +1,9 @@
 import { ReactiveController, ReactiveElement } from 'lit';
 import { EventEmitter } from '../utils/eventemitter.js';
 import { AudioTrackTabConfig, MIDITrackTabConfig, TabConfig } from './tabfactory.js';
-import { Playback as AudioPlayback } from 'music-timeline/playback/audioplayback.js';
-import { Playback as MIDIPlayback } from 'music-timeline/playback/midiplayback.js';
+import { Playback as AudioPlayback } from 'music-timeline/playback/audio.js';
+import { Playback as MIDIPlayback } from 'music-timeline/playback/midi.js';
+import { AppController } from '../models/app.js';
 
 export class Tabs extends EventEmitter implements ReactiveController {
     static TAB_CHANGE_EVENT = 'tabchange';
@@ -37,9 +38,17 @@ export class Tabs extends EventEmitter implements ReactiveController {
         await AudioPlayback.stop();
         await MIDIPlayback.stop();
 
+        if (AppController.timelineRef.value) {
+            AppController.timelineRef.value.currentTime = 0;
+            AppController.timelineRef.value.clearSelectionRange();
+        }
+
         if (this.currentTab?.type === 'MIDITrack') {
+            AppController.beatsPerMeasure = (this.currentTab as MIDITrackTabConfig)?.track?.timeSignature.numerator
+            AppController.beatsPerMinute = 1000000 * 60 / ((this.currentTab as MIDITrackTabConfig)?.track?.timeMeta.tempo || 1000000);
             MIDIPlayback.data = (this.currentTab as MIDITrackTabConfig).track.sequence;
         } else if (this.currentTab?.type === 'AudioTrack'){
+            AppController.beatsPerMeasure = 4;
             AudioPlayback.data = (this.currentTab as AudioTrackTabConfig).buffer;
         }
     }
@@ -52,7 +61,8 @@ export class Tabs extends EventEmitter implements ReactiveController {
         return this._tabs[this._tabs.findIndex((tab) => tab?.guid === guid)];
     }
 
-    createTab(tab: TabConfig) {
+    async createTab(tab: TabConfig) {
+        await tab.initialize();
         this._tabs.push(tab);
         this.currentTabIndex = this._tabs.length - 1;
         this.hosts.forEach((host) => host.requestUpdate());

@@ -13,8 +13,8 @@ import { style } from './app.css.js';
 import '../playbackcontrols/playbackcontrols.js';
 
 import { TabsController } from '../../models/tabs.js';
-import { Playback as AudioPlayback } from 'music-timeline/playback/audioplayback.js';
-import { Playback as MIDIPlayback } from 'music-timeline/playback/midiplayback.js';
+import { Playback as AudioPlayback } from 'music-timeline/playback/audio.js';
+import { Playback as MIDIPlayback, ToneJS } from 'music-timeline/playback/midi.js';
 
 import '../filetabs/filetabs.js';
 import '../tools-bar/tools-bar.js';
@@ -45,6 +45,16 @@ export class App extends LitElement {
   constructor() {
       super();
       this.midiPlaybackController.isLooping = true;
+      this.midiPlaybackController.synth = new ToneJS.Sampler({
+          urls: {
+              C4: "C4.mp3",
+              "D#4": "Ds4.mp3",
+              "F#4": "Fs4.mp3",
+              A4: "A4.mp3",
+          },
+          release: 1,
+          baseUrl: "https://tonejs.github.io/audio/salamander/",
+      }).toDestination();
       this.audioPlaybackController.isLooping = true;
       this.addEventListener('alert',((e: GlobalAlertEvent) => {
          this.toastMessage = e.message;

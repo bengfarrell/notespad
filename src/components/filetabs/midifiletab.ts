@@ -4,7 +4,7 @@ import { TabsController } from '../../models/tabs';
 import { renderTrack } from '../../utils/render-track';
 import { MIDITrack } from 'music-timeline';
 import { MIDIFileTabConfig, MIDITrackTabConfig } from '../../models/tabfactory';
-import { Playback } from 'music-timeline/playback/midiplayback.js';
+import { Playback } from 'music-timeline/playback/midi.js';
 
 @customElement('notespad-tab-midifile')
 export class MIDIFileTab extends LitElement {

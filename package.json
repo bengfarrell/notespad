@@ -20,13 +20,14 @@
     "url": "https://github.com/bengfarrell/notespad.git"
   },
   "dependencies": {
-    "@spectrum-web-components/bundle": "^0.48.1",
+    "@spectrum-web-components/bundle": "^1.5.0",
     "@spotify/basic-pitch": "^1.0.1",
     "@tonejs/midi": "^2.0.28",
     "@types/prismjs": "^1.26.5",
     "demucs-wasm": "^0.1.5",
     "lit": "^3.2.0",
-    "music-timeline": "^0.3.2",
+    "music-timeline": "^0.5.0",
+    "web-audio-beat-detector": "^8.2.27",
     "prismjs": "^1.29.0",
     "@breezystack/lamejs": "^1.2.7"
   },

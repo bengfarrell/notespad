@@ -11,10 +11,11 @@ import '@spectrum-web-components/icons-workflow/icons/sp-icon-add.js';
 import '@spectrum-web-components/icons-workflow/icons/sp-icon-remove.js';
 
 import { TabsController } from '../../models/tabs.js';
-import { Playback } from 'music-timeline/playback/midiplayback.js';
+import { Playback } from 'music-timeline/playback/midi.js';
 import { MIDITrackTabConfig, SonicPITrackTabConfig } from '../../models/tabfactory';
 import { defaultPitchDetectOptions, pitchDetectToMIDITrack } from '../../utils/audio.js';
 import { AppController } from '../../models/app.js';
+import { MIDITimeline } from 'music-timeline';
 
 @customElement('notespad-panel-miditrack')
 export class MIDITrackPanel extends LitElement {
@@ -98,7 +99,7 @@ export class MIDITrackPanel extends LitElement {
 
         tabData.track = track;
         if (this.appController.timelineRef?.value) {
-            this.appController.timelineRef.value.midiTrack = track;
+            (this.appController.timelineRef.value as MIDITimeline).midiTrack = track;
             this.playbackController.data = track.sequence;
         }
     }
@@ -128,10 +129,8 @@ export class MIDITrackPanel extends LitElement {
             <sp-button @click=${this.sonicPIExport.bind(this)}>Export SonicPI</sp-button>
             <br />
             <sp-field-label>Instrument</sp-field-label>
-            <sp-picker @change=${this.handleInstrumentChange.bind(this)} size="m" value="poly-synth" label="Instrument">
-                <sp-menu-item value="poly-synth">Poly Synth</sp-menu-item>
+            <sp-picker @change=${this.handleInstrumentChange.bind(this)} size="m" value="piano" label="Instrument">
                 <sp-menu-item value="piano">Piano</sp-menu-item>
-                <sp-menu-item value="sampled-piano">Sampled Piano</sp-menu-item>
             </sp-picker>
 
             <br /><br />

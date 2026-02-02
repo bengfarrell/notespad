@@ -4,10 +4,11 @@ import { renderWaveform } from 'music-timeline/utils/renderwaveform.js';
 export const renderTrack = async (track: MIDITrack | Float32Array[], width: number, height: number) => {
     const c = new OffscreenCanvas(width, height);
     const ctx = c.getContext('2d');
+    let result;
     if (ctx) {
         ctx.fillStyle = '#ffffff';
         if (Array.isArray(track)) {
-            renderWaveform(ctx, width, height, track as Float32Array[], 1, 0.8);
+            result = renderWaveform(ctx, width, height, track as Float32Array[], 0.8);
         } else {
             ctx.fillStyle = '#5a8050';
             (track as MIDITrack).events.forEach((e) => {
@@ -17,5 +18,5 @@ export const renderTrack = async (track: MIDITrack | Float32Array[], width: numb
             });
         }
     }
-    return URL.createObjectURL(await c.convertToBlob());
+    return { image: URL.createObjectURL(await c.convertToBlob()), maxAmplitude: result?.maxAmplitude };
 }
